@@ -1,44 +1,39 @@
+% Q3: Ergodic capacity of the fast-fading (Rayleigh) SIMO channel
 clear; clc; close all;
 
 % Parameters
-SNR_dB = 0:5:40;                 % vector of SNR in dB
-SNR_lin = 10.^(SNR_dB/10);       % vector of SNR in linear scale
-nr = 4;                          % number of receive antennas
-n = 1000;                        % number of channel realizations
+SNR_dB  = 0:5:40;                % SNR in dB
+SNR_lin = 10.^(SNR_dB/10);       % SNR in linear scale
+nr      = 4;                     % number of receive antennas
+n       = 1000;                  % number of channel realizations
 
-%This is the capacity of fast fading SIMO channel for 9 different given snr
-%values
-C_ergodic_SIMO = zeros(size(SNR_lin));  % [0 0 0 0 0 0 0 0 0]
-
-%now for each value of SNR_lin we have to generate 1000 random channels and
-%then find capacity for each of 1000 channels , averaging these values of
-%capacity will give us the ergodic capacity.
-
+% Generate n Rayleigh channel vectors h ~ CN(0, I_nr); column t is realization t
+Hs = (randn(nr,n) + 1i*randn(nr,n))/sqrt(2);
+G  = sum(abs(Hs).^2, 1);         % ||h||^2 for each realization (1 x n)
+Eh=mean(G);
+disp(Eh);
+C_ergodic_SIMO = zeros(size(SNR_lin));
 for k = 1:length(SNR_lin)
-    snr = SNR_lin(k);             % iterating over each value of snr out of SNR_lin
-    C_temp = zeros(1,n);  % a row vector that store instantaneous capacity corresponding to 1000 random channel relaization and a single SNR  value
-    
-    for t = 1:n
-        %generate channel vector
-        hreal = randn(nr,1);        % vector (nrx1) containing random real values normally distributed with 0 mean and variance 1 by def 
-        himg = randn(nr,1);         % vector (nrx1) containing random img values normally distributed with 0 mean and variance 1 by def 
-        h = (hreal + 1i*himg)/sqrt(2);  % complex Gaussian, normalized
-        % instantaneous capacity corresponding to above h and SNR_lin(k)
-        C_temp(t) = log2(1 + norm(h)^2 * snr);
-    end
-    
-    % ergodic capacity (for fast fading channels) corresponding SNR_lin(k)
-    C_ergodic_SIMO(k) = mean(C_temp);
+    % instantaneous capacity of every realization at this SNR, then average
+    C_inst = log2(1 + G * SNR_lin(k));
+    C_ergodic_SIMO(k) = mean(C_inst);          % ergodic capacity
 end
 
+% AWGN SIMO upper reference (Jensen: E[log2(1+||h||^2 SNR)] <= log2(1+E||h||^2 SNR))
+C_AWGN_SIMO = log2(1 + nr * SNR_lin);
 
-% Display results 
-disp(table(SNR_dB.', SNR_lin.', C_ergodic_SIMO.','VariableNames', {'SNR_dB','SNR_linear','Capacity_fast_fading_SIMO'}));
+% Display results
+disp(table(SNR_dB.', SNR_lin.', C_ergodic_SIMO.', C_AWGN_SIMO.', 'VariableNames', ...
+    {'SNR_dB','SNR_linear','Ergodic_SIMO_Rayleigh','AWGN_SIMO'}));
 
+% Plot
 figure(3);
-plot(SNR_dB, C_ergodic_SIMO, '-o','LineWidth',1.5,'MarkerSize',6);
+plot(SNR_dB, C_ergodic_SIMO, '-o', 'LineWidth', 1.5, 'MarkerSize', 6);
+hold on;
+plot(SNR_dB, C_AWGN_SIMO, '--s', 'LineWidth', 1.5, 'MarkerSize', 5, 'Color', [1 0 0]);
+hold off;
 grid on;
 xlabel('SNR (dB)');
 ylabel('Ergodic Capacity (bits/s/Hz)');
-title('Fast-Fading SIMO Channel Capacity');
-
+title('Fast-Fading (Rayleigh) SIMO Channel Capacity');
+legend('Ergodic SIMO (Rayleigh)', 'AWGN SIMO bound', 'Location', 'best');
