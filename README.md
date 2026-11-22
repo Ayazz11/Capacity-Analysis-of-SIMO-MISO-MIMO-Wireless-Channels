@@ -202,6 +202,3 @@ Points to remember:
 3. L. Zheng and D. Tse, "Diversity and Multiplexing: A Fundamental Tradeoff in Multiple-Antenna Channels," IEEE Transactions on Information Theory, 2003.
 4. D. Tse and P. Viswanath, *Fundamentals of Wireless Communication*, Cambridge University Press, 2005.
 
-## Author
-
-Ayaz Mumtaz Ansari
